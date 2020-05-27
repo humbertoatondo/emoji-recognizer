@@ -2,13 +2,13 @@ import numpy as np
 import cv2
 import os
 import matplotlib.pyplot as plt
+import pickle
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.layers import Dropout, Flatten, Dense
 from keras.layers.convolutional import Conv2D, MaxPooling2D
-
 from keras.utils.np_utils import to_categorical
 
 """
@@ -26,6 +26,7 @@ images = []
 class_number = []
 
 dir_list = os.listdir(path)
+print(dir_list)
 
 number_of_classes = len(dir_list)
 
@@ -126,3 +127,33 @@ def create_model():
 
 model = create_model()
 print(model.summary())
+
+history = model.fit_generator(data_generator.flow(X_train, y_train,
+                                        batch_size = 50),
+                                        steps_per_epoch = 2000,
+                                        epochs = 10,
+                                        validation_data = (X_validation, y_validation),
+                                        shuffle = 1)
+
+plt.figure(1)
+plt.plot(history.history["loss"])
+plt.plot(history.history["val_loss"])
+plt.legend(["training", "validation"])
+plt.title("Loss")
+plt.xlabel("epoch")
+
+plt.figure(2)
+plt.plot(history.history["accuracy"])
+plt.plot(history.history["val_accuracy"])
+plt.legend(["training", "validation"])
+plt.title("Accuracy")
+plt.xlabel("epoch")
+plt.show()
+
+score = model.evaluate(X_test, y_test, verbose = 0)
+print("Test score: ", score[0])
+print("Test accuracy: ", score[1])
+
+pickle_out = open("model_trained.p", "wb")
+pickle.dump(model, pickle_out)
+pickle_out.close()
